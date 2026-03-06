@@ -10,4 +10,16 @@ fi
 
 "$VENV/bin/pip" install --quiet -r "$SCRIPT_DIR/requirements-dev.txt"
 
-PYTHONPATH="$SCRIPT_DIR/src" exec "$VENV/bin/pytest" "$@"
+export PYTHONPATH="$SCRIPT_DIR/src"
+
+echo "=== mypy ==="
+"$VENV/bin/mypy" src/ tests/
+
+echo "=== pylint ==="
+"$VENV/bin/pylint" src/ tests/
+
+echo "=== vulture ==="
+"$VENV/bin/vulture" src/
+
+echo "=== pytest ==="
+exec "$VENV/bin/pytest" "$@"

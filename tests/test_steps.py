@@ -20,7 +20,7 @@ class TestRunStep:
 
     @patch("company.ci.steps.set_commit_status")
     @patch("company.ci.steps.checkout_app")
-    def test_runs_android_deploy(self, mock_checkout, mock_status, capsys):
+    def test_runs_android_deploy(self, _mock_checkout, _mock_status, capsys):
         run_step("android", "deploy", "sha456", "token", "http://build/2")
 
         output = capsys.readouterr().out

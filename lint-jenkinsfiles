@@ -1,0 +1,21 @@
+#!/bin/bash
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+if ! command -v npx &>/dev/null; then
+    echo "npx not found — installing Node.js..."
+    if command -v apt-get &>/dev/null; then
+        sudo apt-get update -qq && sudo apt-get install -y -qq nodejs npm
+    else
+        echo "ERROR: Cannot install Node.js automatically. Please install Node.js manually."
+        exit 1
+    fi
+fi
+
+cd "$SCRIPT_DIR"
+
+FILES=$(find . -name 'Jenkinsfile' -o -name '*.Jenkinsfile' | sort)
+echo "=== npm-groovy-lint ==="
+echo "Linting: $FILES"
+exec npx npm-groovy-lint $FILES --failon warning

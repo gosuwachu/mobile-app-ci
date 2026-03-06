@@ -1,6 +1,8 @@
 from unittest.mock import patch, MagicMock
 import json
 
+import pytest
+
 from company.ci.github import github_api, set_commit_status, check_collaborator
 
 
@@ -28,7 +30,7 @@ class TestGithubApi:
         mock_resp.__exit__ = MagicMock(return_value=False)
         mock_urlopen.return_value = mock_resp
 
-        status, data = github_api(
+        status, _data = github_api(
             "/repos/owner/repo/statuses/abc123",
             "fake-token",
             method="POST",
@@ -88,8 +90,6 @@ class TestCheckCollaborator:
     @patch("company.ci.github.github_api")
     def test_non_collaborator_exits(self, mock_api):
         mock_api.return_value = (404, {})
-
-        import pytest
 
         with pytest.raises(SystemExit):
             check_collaborator("outsider", "token")

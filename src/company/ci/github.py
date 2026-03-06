@@ -28,7 +28,7 @@ def github_api(path, token, method="GET", data=None):
         return e.code, resp_body
 
 
-def set_commit_status(sha, context, state, description, token, build_url):
+def set_commit_status(sha, context, state, description, token, build_url):  # pylint: disable=too-many-arguments,too-many-positional-arguments
     status, resp = github_api(
         f"/repos/{GITHUB_OWNER}/{GITHUB_REPO}/statuses/{sha}",
         token,

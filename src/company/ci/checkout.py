@@ -14,6 +14,7 @@ def checkout_app(sha, token):
             capture_output=True,
             text=True,
             cwd=APP_DIR,
+            check=False,
         )
         if result.returncode == 0 and result.stdout.strip() == sha:
             print(f"App repo already at {sha}")

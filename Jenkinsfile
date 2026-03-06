@@ -1,9 +1,18 @@
 pipeline {
     agent any
     stages {
-        stage('Test') {
-            steps {
-                sh './run-tests -v'
+        stage('Lint & Test') {
+            parallel {
+                stage('Python') {
+                    steps {
+                        sh './run-tests -v'
+                    }
+                }
+                stage('Jenkinsfiles') {
+                    steps {
+                        sh './lint-jenkinsfiles'
+                    }
+                }
             }
         }
     }
