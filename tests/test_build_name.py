@@ -63,7 +63,7 @@ class TestGetBuildName:
         "JENKINSFILE": "ci/ios/ios-deploy.Jenkinsfile",
         "COMMIT_SHA": "abc1234",
         "BUILD_NUMBER": "5",
-        "CONTEXT_JSON": '{"job_name": "mobile-app/omnibus", "build_number": "42"}',
+        "CONTEXT_JSON": '{"job_name": "mobile-app-support/omnibus", "build_number": "42"}',
     }, clear=True)
     def test_context_json_in_display_name(self):
         assert get_build_name() == "#5 abc1234 ios-deploy [from omnibus #42]"

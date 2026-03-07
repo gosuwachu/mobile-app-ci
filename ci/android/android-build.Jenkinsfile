@@ -21,7 +21,7 @@ pipeline {
         }
         stage('Trigger Android Deploy') {
             steps {
-                build job: 'mobile-app/omnibus',
+                build job: 'mobile-app-support/omnibus',
                       parameters: [
                           string(name: 'BRANCH_NAME', value: env.BRANCH_NAME),
                           string(name: 'COMMIT_SHA', value: env.COMMIT_SHA),

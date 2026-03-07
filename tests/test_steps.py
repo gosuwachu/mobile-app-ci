@@ -38,21 +38,22 @@ class TestRunStep:
     @patch("company.ci.steps.set_commit_status")
     @patch("company.ci.steps.checkout_app")
     def test_outputs_json_with_env_vars(self, _mock_checkout, _mock_status, capsys):
-        with patch.dict("os.environ", {"JOB_NAME": "mobile-app/omnibus", "BUILD_NUMBER": "42"}):
+        env = {"JOB_NAME": "mobile-app-support/omnibus", "BUILD_NUMBER": "42"}
+        with patch.dict("os.environ", env):
             run_step("ios", "build", "sha1", "tok", "http://build/1")
 
         result = json.loads(capsys.readouterr().out.strip())
-        assert result["job_name"] == "mobile-app/omnibus"
+        assert result["job_name"] == "mobile-app-support/omnibus"
         assert result["build_number"] == "42"
         assert result["build_url"] == "http://build/1"
 
     @patch("company.ci.steps.set_commit_status")
     @patch("company.ci.steps.checkout_app")
     def test_context_json_logged(self, _mock_checkout, _mock_status, capsys):
-        ctx = json.dumps({"job_name": "mobile-app/omnibus", "build_number": "99"})
+        ctx = json.dumps({"job_name": "mobile-app-support/omnibus", "build_number": "99"})
         run_step("ios", "deploy", "sha1", "tok", "http://build/1", context_json=ctx)
 
-        assert "Triggered by: mobile-app/omnibus #99" in capsys.readouterr().err
+        assert "Triggered by: mobile-app-support/omnibus #99" in capsys.readouterr().err
 
     def test_all_steps_have_entries(self):
         expected = [

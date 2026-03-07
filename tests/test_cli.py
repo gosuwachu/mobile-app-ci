@@ -30,7 +30,7 @@ class TestCliParsing:
     @patch("company.ci.cli.run_step")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})
     def test_deploy_with_context_json(self, mock_run):
-        ctx = '{"job_name": "mobile-app/omnibus", "build_number": "42"}'
+        ctx = '{"job_name": "mobile-app-support/omnibus", "build_number": "42"}'
         argv = [
             "ci-cli", "ios", "deploy",
             "--commit-sha", "abc", "--build-url", "http://b",

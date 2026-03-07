@@ -42,7 +42,7 @@ Child Jenkinsfiles are minimal wrappers that call `./ci-cli <platform> <step>` w
 3. Running the step (currently prints a placeholder message)
 4. Setting GitHub commit status to `success` or `failure`
 
-The omnibus job in Jenkins (`mobile-app/omnibus`) checks out this repo at `main` and runs whichever Jenkinsfile is specified by the `JENKINSFILE` parameter.
+The omnibus job in Jenkins (`mobile-app-support/omnibus`) checks out this repo at `main` and runs whichever Jenkinsfile is specified by the `JENKINSFILE` parameter.
 
 ## Common Commands
 

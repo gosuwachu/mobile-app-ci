@@ -57,7 +57,7 @@ def publishSkippedStatuses(String platform) {
 }
 
 def triggerJob(String jenkinsfile) {
-    build job: 'mobile-app/omnibus',
+    build job: 'mobile-app-support/omnibus',
           parameters: [
               string(name: 'BRANCH_NAME', value: env.BRANCH_TO_BUILD),
               string(name: 'COMMIT_SHA', value: env.GIT_COMMIT),
