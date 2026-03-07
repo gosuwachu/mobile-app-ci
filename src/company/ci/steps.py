@@ -4,7 +4,7 @@ from company.ci.checkout import checkout_app
 from company.ci.github import check_collaborator, resolve_pr, set_commit_status
 
 STEPS = {
-    ("ios", "build"): ("iOS Build", "ci/ios-build", "Building iOS..."),
+    ("ios", "build"): ("iOS Build", "ci/ios-build", "Building iOS from dev/pwach/test branch..."),
     ("ios", "unit-tests"): (
         "iOS Unit Tests",
         "ci/ios-unit-tests",
