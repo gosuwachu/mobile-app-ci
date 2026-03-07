@@ -3,6 +3,12 @@ pipeline {
     stages {
         stage('iOS UI Tests') {
             steps {
+                script {
+                    currentBuild.displayName = sh(
+                        script: './ci-cli build-name --name ios-ui-tests',
+                        returnStdout: true,
+                    ).trim()
+                }
                 withCredentials([usernamePassword(credentialsId: 'github-app',
                         usernameVariable: 'GH_APP', passwordVariable: 'GH_TOKEN')]) {
                     sh """./ci-cli ios ui-tests \

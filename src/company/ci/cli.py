@@ -1,11 +1,18 @@
 import argparse
 
+from company.ci.build_name import get_build_name
 from company.ci.steps import STEPS, run_step, run_ui_tests
 
 
 def main():
     parser = argparse.ArgumentParser(description="CI CLI")
-    subparsers = parser.add_subparsers(dest="platform", required=True)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # build-name: reads env vars, prints display name to stdout
+    build_name_parser = subparsers.add_parser("build-name")
+    build_name_parser.add_argument(
+        "--name", help="Override build name (instead of deriving from JENKINSFILE env var)",
+    )
 
     for platform in ("ios", "android"):
         platform_parser = subparsers.add_parser(platform)
@@ -26,7 +33,9 @@ def main():
 
     args = parser.parse_args()
 
-    if args.platform == "ios" and args.step == "ui-tests":
+    if args.command == "build-name":
+        print(get_build_name(args.name))
+    elif args.command == "ios" and args.step == "ui-tests":
         run_ui_tests(args)
     else:
-        run_step(args.platform, args.step, args.commit_sha, args.gh_token, args.build_url)
+        run_step(args.command, args.step, args.commit_sha, args.gh_token, args.build_url)

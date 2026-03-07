@@ -39,7 +39,20 @@ class TestCliParsing:
         assert args.pr_number == "42"
         assert args.comment_author == "user"
 
-    def test_missing_platform_exits(self):
+    def test_missing_command_exits(self):
         with patch("sys.argv", ["ci-cli"]):
             with pytest.raises(SystemExit):
                 main()
+
+    @patch("company.ci.cli.get_build_name", return_value="#7 ios-build abc1234")
+    def test_build_name(self, mock_get, capsys):
+        with patch("sys.argv", ["ci-cli", "build-name"]):
+            main()
+        mock_get.assert_called_once_with(None)
+        assert capsys.readouterr().out.strip() == "#7 ios-build abc1234"
+
+    @patch("company.ci.cli.get_build_name", return_value="#7 ios-ui-tests PR#42")
+    def test_build_name_with_override(self, mock_get):
+        with patch("sys.argv", ["ci-cli", "build-name", "--name", "ios-ui-tests"]):
+            main()
+        mock_get.assert_called_once_with("ios-ui-tests")
