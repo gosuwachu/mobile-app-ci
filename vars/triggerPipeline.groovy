@@ -12,7 +12,7 @@ def checkCollaborator() {
         def ciCli = sh(script: "ls ${env.WORKSPACE}@libs/*/ci-cli", returnStdout: true).trim()
         withCredentials([usernamePassword(credentialsId: 'github-app',
                 usernameVariable: 'GH_APP', passwordVariable: 'GH_TOKEN')]) {
-            sh "${ciCli} check-collaborator --pr-number ${env.CHANGE_ID} --author ${env.CHANGE_AUTHOR} --gh-token \$GH_TOKEN"
+            sh "${ciCli} check-collaborator --pr-number ${env.CHANGE_ID} --author ${env.CHANGE_AUTHOR}"
         }
     } catch (e) {
         currentBuild.result = 'NOT_BUILT'
@@ -32,7 +32,7 @@ def detectPlatforms() {
         withCredentials([usernamePassword(credentialsId: 'github-app',
                 usernameVariable: 'GH_APP', passwordVariable: 'GH_TOKEN')]) {
             output = sh(
-                script: "${ciCli} detect-changes --target-branch ${env.CHANGE_TARGET} --gh-token \$GH_TOKEN",
+                script: "${ciCli} detect-changes --target-branch ${env.CHANGE_TARGET}",
                 returnStdout: true
             ).trim()
         }
@@ -52,7 +52,7 @@ def publishSkippedStatuses(String platform) {
     def sha = env.GIT_COMMIT ?: sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
     withCredentials([usernamePassword(credentialsId: 'github-app',
             usernameVariable: 'GH_APP', passwordVariable: 'GH_TOKEN')]) {
-        sh "${ciCli} skip-statuses --platform ${platform} --commit-sha ${sha} --gh-token \$GH_TOKEN --build-url ${env.BUILD_URL}"
+        sh "${ciCli} skip-statuses --platform ${platform} --commit-sha ${sha} --build-url ${env.BUILD_URL}"
     }
 }
 

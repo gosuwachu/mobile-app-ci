@@ -14,7 +14,6 @@ pipeline {
                     sh """./ci-cli ios ui-tests \
                         --pr-number ${env.CHANGE_ID} \
                         --comment-author ${env.COMMENT_AUTHOR} \
-                        --gh-token \$GH_TOKEN \
                         --build-url ${env.BUILD_URL}"""
                 }
             }

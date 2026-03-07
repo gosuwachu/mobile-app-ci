@@ -83,8 +83,9 @@ class TestRunDetectChanges:
 
 class TestDetectChangesCli:
     @patch("company.ci.cli.run_detect_changes")
+    @patch.dict("os.environ", {"GH_TOKEN": "tok"})
     def test_detect_changes_subcommand(self, mock_run):
-        with patch("sys.argv", ["ci-cli", "detect-changes", "--gh-token", "tok"]):
+        with patch("sys.argv", ["ci-cli", "detect-changes"]):
             main()
         mock_run.assert_called_once()
         args = mock_run.call_args[0][0]
@@ -92,8 +93,9 @@ class TestDetectChangesCli:
         assert args.target_branch is None
 
     @patch("company.ci.cli.run_detect_changes")
+    @patch.dict("os.environ", {"GH_TOKEN": "tok"})
     def test_detect_changes_with_target_branch(self, mock_run):
-        argv = ["ci-cli", "detect-changes", "--gh-token", "tok", "--target-branch", "develop"]
+        argv = ["ci-cli", "detect-changes", "--target-branch", "develop"]
         with patch("sys.argv", argv):
             main()
         args = mock_run.call_args[0][0]

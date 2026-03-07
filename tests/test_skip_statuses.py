@@ -42,12 +42,12 @@ class TestPublishSkipStatuses:
 
 class TestSkipStatusesCli:
     @patch("company.ci.cli.run_skip_statuses")
+    @patch.dict("os.environ", {"GH_TOKEN": "tok"})
     def test_subcommand(self, mock_run):
         argv = [
             "ci-cli", "skip-statuses",
             "--platform", "ios",
             "--commit-sha", "sha1",
-            "--gh-token", "tok",
             "--build-url", "http://build/1",
         ]
         with patch("sys.argv", argv):

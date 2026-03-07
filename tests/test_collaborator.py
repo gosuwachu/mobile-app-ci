@@ -72,11 +72,11 @@ class TestRunCheckCollaborator:
 
 class TestCheckCollaboratorCli:
     @patch("company.ci.cli.run_check_collaborator")
+    @patch.dict("os.environ", {"GH_TOKEN": "tok"})
     def test_subcommand(self, mock_run):
         argv = [
             "ci-cli", "check-collaborator",
             "--pr-number", "7", "--author", "alice",
-            "--gh-token", "tok",
         ]
         with patch("sys.argv", argv):
             main()
@@ -86,8 +86,9 @@ class TestCheckCollaboratorCli:
         assert args.author == "alice"
 
     @patch("company.ci.cli.run_check_collaborator")
+    @patch.dict("os.environ", {"GH_TOKEN": "tok"})
     def test_subcommand_without_optional_args(self, mock_run):
-        argv = ["ci-cli", "check-collaborator", "--gh-token", "tok"]
+        argv = ["ci-cli", "check-collaborator"]
         with patch("sys.argv", argv):
             main()
         args = mock_run.call_args[0][0]

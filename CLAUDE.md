@@ -57,7 +57,7 @@ PYTHONPATH=src .venv/bin/pytest -v
 ./lint-jenkinsfiles
 
 # Run CLI locally (requires GitHub token)
-./ci-cli ios build --commit-sha <sha> --gh-token <token> --build-url <url>
+GH_TOKEN=<token> ./ci-cli ios build --commit-sha <sha> --build-url <url>
 ```
 
 ## Adding a New CI Step

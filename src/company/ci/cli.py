@@ -1,4 +1,5 @@
 import argparse
+import os
 
 from company.ci.build_name import get_build_name
 from company.ci.changes import run_detect_changes
@@ -21,19 +22,16 @@ def main():
     collab_parser = subparsers.add_parser("check-collaborator")
     collab_parser.add_argument("--pr-number", help="Pull request number")
     collab_parser.add_argument("--author", help="PR author username")
-    collab_parser.add_argument("--gh-token", required=True, help="GitHub token")
 
     # skip-statuses: publishes skipped commit statuses for a platform
     skip_parser = subparsers.add_parser("skip-statuses")
     skip_parser.add_argument("--platform", required=True, choices=["ios", "android"])
     skip_parser.add_argument("--commit-sha", required=True)
-    skip_parser.add_argument("--gh-token", required=True)
     skip_parser.add_argument("--build-url", required=True)
 
     # detect-changes: detects which platforms have changed files in a PR
     detect_parser = subparsers.add_parser("detect-changes")
     detect_parser.add_argument("--target-branch", help="PR target branch to diff against")
-    detect_parser.add_argument("--gh-token", required=True, help="GitHub token for fetching")
 
     for platform in ("ios", "android"):
         platform_parser = subparsers.add_parser(platform)
@@ -42,7 +40,6 @@ def main():
         steps_for_platform = [k[1] for k in STEPS if k[0] == platform]
         for step in steps_for_platform:
             step_parser = step_parsers.add_parser(step)
-            step_parser.add_argument("--gh-token", required=True)
             step_parser.add_argument("--build-url", required=True)
 
             if platform == "ios" and step == "ui-tests":
@@ -53,6 +50,9 @@ def main():
                 step_parser.add_argument("--commit-sha", required=True)
 
     args = parser.parse_args()
+
+    if args.command != "build-name":
+        args.gh_token = os.environ["GH_TOKEN"]
 
     if args.command == "build-name":
         print(get_build_name(args.name))
