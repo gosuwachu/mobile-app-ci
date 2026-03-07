@@ -22,7 +22,8 @@ def github_api(path, token, method="GET", data=None):
     )
     try:
         with urllib.request.urlopen(req) as resp:
-            return resp.status, json.loads(resp.read())
+            body = resp.read()
+            return resp.status, json.loads(body) if body else {}
     except urllib.error.HTTPError as e:
         resp_body = json.loads(e.read()) if e.fp else {}
         return e.code, resp_body
