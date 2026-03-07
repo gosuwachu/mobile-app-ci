@@ -7,7 +7,7 @@ class TestGetBuildName:
     @patch.dict("os.environ", {
         "JENKINSFILE": "ci/ios/ios-build.Jenkinsfile",
         "COMMIT_SHA": "abc1234567890",
-        "PR_NUMBER": "42",
+        "CHANGE_ID": "42",
         "CI_BRANCH": "main",
         "BUILD_NUMBER": "7",
     })
@@ -26,7 +26,7 @@ class TestGetBuildName:
     @patch.dict("os.environ", {
         "JENKINSFILE": "ci/ios/ios-build.Jenkinsfile",
         "COMMIT_SHA": "abc1234",
-        "PR_NUMBER": "5",
+        "CHANGE_ID": "5",
         "CI_BRANCH": "feature/new-steps",
         "BUILD_NUMBER": "3",
     })
@@ -34,7 +34,7 @@ class TestGetBuildName:
         assert get_build_name() == "#3 abc1234 PR#5 ios-build [ci:feature/new-steps]"
 
     @patch.dict("os.environ", {
-        "PR_NUMBER": "42",
+        "CHANGE_ID": "42",
         "BUILD_NUMBER": "9",
     }, clear=True)
     def test_name_override(self):
@@ -56,15 +56,5 @@ class TestGetBuildName:
         "CHANGE_ID": "7",
         "BUILD_NUMBER": "3",
     }, clear=True)
-    def test_fallback_to_git_commit_and_change_id(self):
+    def test_fallback_to_git_commit(self):
         assert get_build_name() == "#3 abc1234 PR#7"
-
-    @patch.dict("os.environ", {
-        "COMMIT_SHA": "aaa1111",
-        "GIT_COMMIT": "bbb2222",
-        "PR_NUMBER": "10",
-        "CHANGE_ID": "20",
-        "BUILD_NUMBER": "5",
-    }, clear=True)
-    def test_commit_sha_and_pr_number_take_precedence(self):
-        assert get_build_name() == "#5 aaa1111 PR#10"

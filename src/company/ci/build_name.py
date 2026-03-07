@@ -22,7 +22,7 @@ def get_build_name(name_override: str | None = None) -> str:
     if commit_sha:
         parts.append(commit_sha[:7])
 
-    pr_number = os.environ.get("PR_NUMBER", "") or os.environ.get("CHANGE_ID", "")
+    pr_number = os.environ.get("CHANGE_ID", "")
     if pr_number:
         parts.append(f"PR#{pr_number}")
 

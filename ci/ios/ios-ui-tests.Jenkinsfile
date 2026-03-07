@@ -12,7 +12,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'github-app',
                         usernameVariable: 'GH_APP', passwordVariable: 'GH_TOKEN')]) {
                     sh """./ci-cli ios ui-tests \
-                        --pr-number ${env.PR_NUMBER} \
+                        --pr-number ${env.CHANGE_ID} \
                         --comment-author ${env.COMMENT_AUTHOR} \
                         --gh-token \$GH_TOKEN \
                         --build-url ${env.BUILD_URL}"""

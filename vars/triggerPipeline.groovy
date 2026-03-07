@@ -61,7 +61,7 @@ def triggerJob(String jenkinsfile) {
           parameters: [
               string(name: 'BRANCH_NAME', value: env.BRANCH_TO_BUILD),
               string(name: 'COMMIT_SHA', value: env.GIT_COMMIT),
-              string(name: 'PR_NUMBER', value: env.CHANGE_ID ?: ''),
+              string(name: 'CHANGE_ID', value: env.CHANGE_ID ?: ''),
               string(name: 'JENKINSFILE', value: jenkinsfile),
               string(name: 'CI_BRANCH', value: params.CI_BRANCH)
           ],
