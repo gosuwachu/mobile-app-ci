@@ -2,6 +2,7 @@ import argparse
 
 from company.ci.build_name import get_build_name
 from company.ci.changes import run_detect_changes
+from company.ci.collaborator import run_check_collaborator
 from company.ci.steps import STEPS, run_step, run_ui_tests
 
 
@@ -14,6 +15,12 @@ def main():
     build_name_parser.add_argument(
         "--name", help="Override build name (instead of deriving from JENKINSFILE env var)",
     )
+
+    # check-collaborator: verifies PR author is a collaborator or has approved review
+    collab_parser = subparsers.add_parser("check-collaborator")
+    collab_parser.add_argument("--pr-number", help="Pull request number")
+    collab_parser.add_argument("--author", help="PR author username")
+    collab_parser.add_argument("--gh-token", required=True, help="GitHub token")
 
     # detect-changes: detects which platforms have changed files in a PR
     detect_parser = subparsers.add_parser("detect-changes")
@@ -41,6 +48,8 @@ def main():
 
     if args.command == "build-name":
         print(get_build_name(args.name))
+    elif args.command == "check-collaborator":
+        run_check_collaborator(args)
     elif args.command == "detect-changes":
         run_detect_changes(args)
     elif args.command == "ios" and args.step == "ui-tests":
