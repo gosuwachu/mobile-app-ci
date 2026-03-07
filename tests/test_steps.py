@@ -55,6 +55,20 @@ class TestRunStep:
 
         assert "Triggered by: mobile-app-support/omnibus #99" in capsys.readouterr().err
 
+    @patch("company.ci.steps.set_commit_status")
+    @patch("company.ci.steps.checkout_app")
+    def test_no_status_skips_commit_status(self, mock_checkout, mock_status, capsys):
+        run_step("ios", "build", "sha123", "token", "http://build/1", no_status=True)
+
+        mock_checkout.assert_called_once_with("sha123", "token")
+        mock_status.assert_not_called()
+
+        captured = capsys.readouterr()
+        assert "Building iOS..." in captured.err
+        result = json.loads(captured.out.strip())
+        assert result["platform"] == "ios"
+        assert result["step"] == "build"
+
     def test_all_steps_have_entries(self):
         expected = [
             ("ios", "build"),
@@ -62,10 +76,12 @@ class TestRunStep:
             ("ios", "linter"),
             ("ios", "deploy"),
             ("ios", "ui-tests"),
+            ("ios", "alpha-build"),
             ("android", "build"),
             ("android", "unit-tests"),
             ("android", "linter"),
             ("android", "deploy"),
+            ("android", "alpha-build"),
         ]
         for key in expected:
             assert key in STEPS, f"Missing step: {key}"

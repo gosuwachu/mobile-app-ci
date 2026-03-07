@@ -39,10 +39,20 @@ STEPS = {
         "ci/android-deploy",
         "Deploying Android...",
     ),
+    ("ios", "alpha-build"): (
+        "iOS Alpha Build",
+        "ci/ios-alpha-build",
+        "Alpha building iOS...",
+    ),
+    ("android", "alpha-build"): (
+        "Android Alpha Build",
+        "ci/android-alpha-build",
+        "Alpha building Android...",
+    ),
 }
 
 
-def run_step(platform, step, commit_sha, gh_token, build_url, context_json=None):  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def run_step(platform, step, commit_sha, gh_token, build_url, context_json=None, no_status=False):  # pylint: disable=too-many-arguments,too-many-positional-arguments
     _stage_name, context, message = STEPS[(platform, step)]
 
     if context_json:
@@ -51,16 +61,19 @@ def run_step(platform, step, commit_sha, gh_token, build_url, context_json=None)
 
     checkout_app(commit_sha, gh_token)
 
-    set_commit_status(commit_sha, context, "pending", "Running...", gh_token, build_url)
+    if not no_status:
+        set_commit_status(commit_sha, context, "pending", "Running...", gh_token, build_url)
     try:
         print(message, file=sys.stderr)
-        set_commit_status(
-            commit_sha, context, "success", "Passed", gh_token, build_url
-        )
+        if not no_status:
+            set_commit_status(
+                commit_sha, context, "success", "Passed", gh_token, build_url
+            )
     except Exception as e:
-        set_commit_status(
-            commit_sha, context, "failure", f"Failed: {e}", gh_token, build_url
-        )
+        if not no_status:
+            set_commit_status(
+                commit_sha, context, "failure", f"Failed: {e}", gh_token, build_url
+            )
         raise
 
     print(json.dumps({

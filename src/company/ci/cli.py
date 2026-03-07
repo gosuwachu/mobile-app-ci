@@ -54,6 +54,11 @@ def main():
                     "--context-json", help="JSON context from triggering build",
                 )
 
+            step_parser.add_argument(
+                "--no-status", action="store_true",
+                help="Skip GitHub commit status publishing",
+            )
+
     args = parser.parse_args()
 
     if args.command != "build-name":
@@ -71,7 +76,8 @@ def main():
         run_ui_tests(args)
     else:
         context_json = getattr(args, "context_json", None)
+        no_status = getattr(args, "no_status", False)
         run_step(
             args.command, args.step, args.commit_sha,
-            args.gh_token, args.build_url, context_json,
+            args.gh_token, args.build_url, context_json, no_status,
         )

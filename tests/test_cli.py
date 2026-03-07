@@ -14,7 +14,7 @@ class TestCliParsing:
         ]
         with patch("sys.argv", argv):
             main()
-        mock_run.assert_called_once_with("ios", "build", "abc", "tok", "http://b", None)
+        mock_run.assert_called_once_with("ios", "build", "abc", "tok", "http://b", None, False)
 
     @patch("company.ci.cli.run_step")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})
@@ -25,7 +25,7 @@ class TestCliParsing:
         ]
         with patch("sys.argv", argv):
             main()
-        mock_run.assert_called_once_with("android", "linter", "def", "tok", "http://b", None)
+        mock_run.assert_called_once_with("android", "linter", "def", "tok", "http://b", None, False)
 
     @patch("company.ci.cli.run_step")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})
@@ -38,7 +38,32 @@ class TestCliParsing:
         ]
         with patch("sys.argv", argv):
             main()
-        mock_run.assert_called_once_with("ios", "deploy", "abc", "tok", "http://b", ctx)
+        mock_run.assert_called_once_with("ios", "deploy", "abc", "tok", "http://b", ctx, False)
+
+    @patch("company.ci.cli.run_step")
+    @patch.dict("os.environ", {"GH_TOKEN": "tok"})
+    def test_no_status_flag(self, mock_run):
+        argv = [
+            "ci-cli", "ios", "build",
+            "--commit-sha", "abc", "--build-url", "http://b",
+            "--no-status",
+        ]
+        with patch("sys.argv", argv):
+            main()
+        mock_run.assert_called_once_with("ios", "build", "abc", "tok", "http://b", None, True)
+
+    @patch("company.ci.cli.run_step")
+    @patch.dict("os.environ", {"GH_TOKEN": "tok"})
+    def test_alpha_build(self, mock_run):
+        argv = [
+            "ci-cli", "ios", "alpha-build",
+            "--commit-sha", "abc", "--build-url", "http://b",
+        ]
+        with patch("sys.argv", argv):
+            main()
+        mock_run.assert_called_once_with(
+            "ios", "alpha-build", "abc", "tok", "http://b", None, False,
+        )
 
     @patch("company.ci.cli.run_ui_tests")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})
