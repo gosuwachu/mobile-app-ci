@@ -83,7 +83,7 @@ def detectPlatforms() {
     }
 
     try {
-        def ciCli = "${env.WORKSPACE}@libs/ci-lib/ci-cli"
+        def ciCli = sh(script: "ls ${env.WORKSPACE}@libs/*/ci-cli", returnStdout: true).trim()
         def output = ''
         withCredentials([usernamePassword(credentialsId: 'github-app',
                 usernameVariable: 'GH_APP', passwordVariable: 'GH_TOKEN')]) {
