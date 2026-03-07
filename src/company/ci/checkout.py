@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 GITHUB_OWNER = "gosuwachu"
-GITHUB_REPO = "jenkinsfiles-test-app"
+GITHUB_REPO = "mobile-app"
 APP_REPO_URL = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}.git"
 APP_DIR = Path("app")
 

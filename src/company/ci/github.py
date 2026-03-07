@@ -4,7 +4,7 @@ import urllib.request
 import urllib.error
 
 GITHUB_OWNER = "gosuwachu"
-GITHUB_REPO = "jenkinsfiles-test-app"
+GITHUB_REPO = "mobile-app"
 
 
 def github_api(path, token, method="GET", data=None):

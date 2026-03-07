@@ -1,6 +1,6 @@
-# CI Repo (jenkinsfiles-test-app-ci)
+# CI Repo (mobile-app-ci)
 
-CI step definitions and shared tooling for the [jenkinsfiles-test-app](https://github.com/gosuwachu/jenkinsfiles-test-app) mobile pipeline.
+CI step definitions and shared tooling for the [mobile-app](https://github.com/gosuwachu/mobile-app) mobile pipeline.
 
 ## Project Structure
 
@@ -82,5 +82,5 @@ Config lives in `pyproject.toml` (Python tools) and `.groovylintrc.json` (Groovy
 
 ## Companion Repos
 
-- [jenkinsfiles-test](https://github.com/gosuwachu/jenkinsfiles-test) — Jenkins Docker environment, Job DSL, seed job
-- [jenkinsfiles-test-app](https://github.com/gosuwachu/jenkinsfiles-test-app) — app repo with trigger Jenkinsfile and platform directories
+- [jenkins-setup](https://github.com/gosuwachu/jenkins-setup) — Jenkins Docker environment, Job DSL, seed job
+- [mobile-app](https://github.com/gosuwachu/mobile-app) — app repo with trigger Jenkinsfile and platform directories

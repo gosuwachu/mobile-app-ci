@@ -53,7 +53,7 @@ class TestSetCommitStatus:
         )
 
         mock_api.assert_called_once_with(
-            "/repos/gosuwachu/jenkinsfiles-test-app/statuses/abc123",
+            "/repos/gosuwachu/mobile-app/statuses/abc123",
             "token",
             method="POST",
             data={
