@@ -13,7 +13,7 @@ class TestCheckoutApp:
 
         checkout_app("abc123", "token")
 
-        output = capsys.readouterr().out
+        output = capsys.readouterr().err
         assert "already at abc123" in output
         mock_run.assert_called_once()  # only git rev-parse, no fetch/checkout
 
@@ -34,6 +34,6 @@ class TestCheckoutApp:
 
         checkout_app("abc123", "token")
 
-        output = capsys.readouterr().out
+        output = capsys.readouterr().err
         assert "Cloning" in output
         assert mock_run.call_count == 2  # clone + checkout

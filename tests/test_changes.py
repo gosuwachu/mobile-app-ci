@@ -66,8 +66,9 @@ class TestRunDetectChanges:
         run_detect_changes(args)
 
         mock_detect.assert_not_called()
-        output = capsys.readouterr().out
-        parsed = json.loads(output.strip().split("\n")[-1])
+        captured = capsys.readouterr()
+        assert "No target branch" in captured.err
+        parsed = json.loads(captured.out.strip())
         assert parsed == {"ios": True, "android": True}
 
     @patch("company.ci.changes.detect_changes", return_value={"ios": True, "android": False})
@@ -76,8 +77,7 @@ class TestRunDetectChanges:
         run_detect_changes(args)
 
         mock_detect.assert_called_once_with("main", "tok")
-        output = capsys.readouterr().out
-        parsed = json.loads(output.strip().split("\n")[-1])
+        parsed = json.loads(capsys.readouterr().out.strip())
         assert parsed == {"ios": True, "android": False}
 
 

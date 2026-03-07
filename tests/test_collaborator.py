@@ -55,7 +55,7 @@ class TestRunCheckCollaborator:
         args = MagicMock(pr_number=None, author="alice", gh_token="tok")
         run_check_collaborator(args)
         mock_check.assert_not_called()
-        assert "skipping" in capsys.readouterr().out.lower()
+        assert "skipping" in capsys.readouterr().err.lower()
 
     @patch("company.ci.collaborator.check_pr_collaborator")
     def test_no_author_skips(self, mock_check):

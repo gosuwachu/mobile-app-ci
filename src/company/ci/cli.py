@@ -49,6 +49,11 @@ def main():
             else:
                 step_parser.add_argument("--commit-sha", required=True)
 
+            if step == "deploy":
+                step_parser.add_argument(
+                    "--context-json", help="JSON context from triggering build",
+                )
+
     args = parser.parse_args()
 
     if args.command != "build-name":
@@ -65,4 +70,8 @@ def main():
     elif args.command == "ios" and args.step == "ui-tests":
         run_ui_tests(args)
     else:
-        run_step(args.command, args.step, args.commit_sha, args.gh_token, args.build_url)
+        context_json = getattr(args, "context_json", None)
+        run_step(
+            args.command, args.step, args.commit_sha,
+            args.gh_token, args.build_url, context_json,
+        )

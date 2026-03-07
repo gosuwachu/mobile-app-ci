@@ -14,7 +14,7 @@ class TestCliParsing:
         ]
         with patch("sys.argv", argv):
             main()
-        mock_run.assert_called_once_with("ios", "build", "abc", "tok", "http://b")
+        mock_run.assert_called_once_with("ios", "build", "abc", "tok", "http://b", None)
 
     @patch("company.ci.cli.run_step")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})
@@ -25,7 +25,20 @@ class TestCliParsing:
         ]
         with patch("sys.argv", argv):
             main()
-        mock_run.assert_called_once_with("android", "linter", "def", "tok", "http://b")
+        mock_run.assert_called_once_with("android", "linter", "def", "tok", "http://b", None)
+
+    @patch("company.ci.cli.run_step")
+    @patch.dict("os.environ", {"GH_TOKEN": "tok"})
+    def test_deploy_with_context_json(self, mock_run):
+        ctx = '{"job_name": "pipeline/omnibus", "build_number": "42"}'
+        argv = [
+            "ci-cli", "ios", "deploy",
+            "--commit-sha", "abc", "--build-url", "http://b",
+            "--context-json", ctx,
+        ]
+        with patch("sys.argv", argv):
+            main()
+        mock_run.assert_called_once_with("ios", "deploy", "abc", "tok", "http://b", ctx)
 
     @patch("company.ci.cli.run_ui_tests")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})

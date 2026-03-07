@@ -72,7 +72,7 @@ class TestSetCommitStatus:
             "bad", "ci/ios-build", "pending", "Running...", "token", "http://build/1"
         )
 
-        output = capsys.readouterr().out
+        output = capsys.readouterr().err
         assert "WARNING" in output
 
 
@@ -83,7 +83,7 @@ class TestCheckCollaborator:
 
         check_collaborator("user1", "token")
 
-        output = capsys.readouterr().out
+        output = capsys.readouterr().err
         assert "collaborator" in output
         assert "proceeding" in output
 

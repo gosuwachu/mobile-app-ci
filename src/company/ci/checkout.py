@@ -1,4 +1,5 @@
 import subprocess
+import sys
 from pathlib import Path
 
 GITHUB_OWNER = "gosuwachu"
@@ -17,15 +18,15 @@ def checkout_app(sha, token):
             check=False,
         )
         if result.returncode == 0 and result.stdout.strip() == sha:
-            print(f"App repo already at {sha}")
+            print(f"App repo already at {sha}", file=sys.stderr)
             return
-        print(f"Checking out {sha}...")
+        print(f"Checking out {sha}...", file=sys.stderr)
         subprocess.run(["git", "fetch", "origin"], check=True, cwd=APP_DIR)
         subprocess.run(["git", "checkout", "-f", sha], check=True, cwd=APP_DIR)
     else:
         clone_url = APP_REPO_URL.replace(
             "https://", f"https://x-access-token:{token}@"
         )
-        print(f"Cloning app repo at {sha}...")
+        print(f"Cloning app repo at {sha}...", file=sys.stderr)
         subprocess.run(["git", "clone", clone_url, str(APP_DIR)], check=True)
         subprocess.run(["git", "checkout", "-f", sha], check=True, cwd=APP_DIR)

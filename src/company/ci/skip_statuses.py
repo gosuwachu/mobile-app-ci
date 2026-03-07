@@ -1,3 +1,5 @@
+import sys
+
 from company.ci.github import set_commit_status
 from company.ci.steps import STEPS
 
@@ -11,7 +13,7 @@ def publish_skip_statuses(platform, commit_sha, token, build_url):
     ]
 
     for context in contexts:
-        print(f"Publishing skipped status for: {context}")
+        print(f"Publishing skipped status for: {context}", file=sys.stderr)
         set_commit_status(
             commit_sha,
             context,

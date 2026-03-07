@@ -136,18 +136,6 @@ def call() {
                 }
             }
 
-            stage('Deploy') {
-                parallel {
-                    stage('iOS Deploy') {
-                        when { expression { env.RUN_IOS == 'true' } }
-                        steps { triggerJob('ci/ios/ios-deploy.Jenkinsfile') }
-                    }
-                    stage('Android Deploy') {
-                        when { expression { env.RUN_ANDROID == 'true' } }
-                        steps { triggerJob('ci/android/android-deploy.Jenkinsfile') }
-                    }
-                }
-            }
         }
     }
 }

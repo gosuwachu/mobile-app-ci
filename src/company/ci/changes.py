@@ -1,5 +1,6 @@
 import json
 import subprocess
+import sys
 
 from company.ci.checkout import APP_REPO_URL
 
@@ -8,7 +9,7 @@ def detect_changes(target_branch, token):
     auth_url = APP_REPO_URL.replace(
         "https://", f"https://x-access-token:{token}@"
     )
-    print(f"Fetching {target_branch} for diff...")
+    print(f"Fetching {target_branch} for diff...", file=sys.stderr)
     subprocess.run(
         [
             "git", "fetch", auth_url,
@@ -27,10 +28,10 @@ def detect_changes(target_branch, token):
     changed_files = result.stdout.strip()
 
     if not changed_files:
-        print("No changed files detected — running all platforms")
+        print("No changed files detected — running all platforms", file=sys.stderr)
         return {"ios": True, "android": True}
 
-    print(f"Changed files:\n{changed_files}")
+    print(f"Changed files:\n{changed_files}", file=sys.stderr)
 
     has_ios = False
     has_android = False
@@ -45,16 +46,16 @@ def detect_changes(target_branch, token):
             has_other = True
 
     if has_other:
-        print("Files outside ios/ and android/ changed — running all platforms")
+        print("Files outside ios/ and android/ changed — running all platforms", file=sys.stderr)
         return {"ios": True, "android": True}
 
-    print(f"Platform detection: iOS={has_ios}, Android={has_android}")
+    print(f"Platform detection: iOS={has_ios}, Android={has_android}", file=sys.stderr)
     return {"ios": has_ios, "android": has_android}
 
 
 def run_detect_changes(args):
     if not args.target_branch:
-        print("No target branch — running all platforms")
+        print("No target branch — running all platforms", file=sys.stderr)
         result = {"ios": True, "android": True}
     else:
         result = detect_changes(args.target_branch, args.gh_token)

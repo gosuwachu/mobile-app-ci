@@ -1,3 +1,5 @@
+import json
+import os
 import sys
 
 from company.ci.checkout import checkout_app
@@ -40,14 +42,18 @@ STEPS = {
 }
 
 
-def run_step(platform, step, commit_sha, gh_token, build_url):
+def run_step(platform, step, commit_sha, gh_token, build_url, context_json=None):  # pylint: disable=too-many-arguments,too-many-positional-arguments
     _stage_name, context, message = STEPS[(platform, step)]
+
+    if context_json:
+        ctx = json.loads(context_json)
+        print(f"Triggered by: {ctx['job_name']} #{ctx['build_number']}", file=sys.stderr)
 
     checkout_app(commit_sha, gh_token)
 
     set_commit_status(commit_sha, context, "pending", "Running...", gh_token, build_url)
     try:
-        print(message)
+        print(message, file=sys.stderr)
         set_commit_status(
             commit_sha, context, "success", "Passed", gh_token, build_url
         )
@@ -56,6 +62,16 @@ def run_step(platform, step, commit_sha, gh_token, build_url):
             commit_sha, context, "failure", f"Failed: {e}", gh_token, build_url
         )
         raise
+
+    print(json.dumps({
+        "job_name": os.environ.get("JOB_NAME", ""),
+        "build_number": os.environ.get("BUILD_NUMBER", ""),
+        "build_url": build_url,
+        "commit_sha": commit_sha,
+        "platform": platform,
+        "step": step,
+        "context": context,
+    }))
 
 
 def run_ui_tests(args):
@@ -68,7 +84,7 @@ def run_ui_tests(args):
     else:
         commit_sha = args.commit_sha
         if not commit_sha:
-            print("Either --pr-number or --commit-sha is required")
+            print("Either --pr-number or --commit-sha is required", file=sys.stderr)
             sys.exit(1)
 
     run_step("ios", "ui-tests", commit_sha, args.gh_token, args.build_url)

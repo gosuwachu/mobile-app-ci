@@ -42,19 +42,19 @@ def set_commit_status(sha, context, state, description, token, build_url):  # py
         },
     )
     if status >= 300:
-        print(f"WARNING: Failed to set status (HTTP {status}): {resp}")
+        print(f"WARNING: Failed to set status (HTTP {status}): {resp}", file=sys.stderr)
 
 
 def check_collaborator(username, token):
-    print(f"Checking if {username} is a collaborator...")
+    print(f"Checking if {username} is a collaborator...", file=sys.stderr)
     status, _ = github_api(
         f"/repos/{GITHUB_OWNER}/{GITHUB_REPO}/collaborators/{username}",
         token,
     )
     if status == 204:
-        print(f"{username} is a collaborator — proceeding")
+        print(f"{username} is a collaborator — proceeding", file=sys.stderr)
     else:
-        print(f"User {username} is not a collaborator (HTTP {status}) — aborting")
+        print(f"User {username} is not a collaborator (HTTP {status}) — aborting", file=sys.stderr)
         sys.exit(1)
 
 
@@ -64,9 +64,9 @@ def resolve_pr(pr_number, token):
         token,
     )
     if status != 200 or "head" not in data:
-        print(f"Failed to resolve PR #{pr_number} (HTTP {status})")
+        print(f"Failed to resolve PR #{pr_number} (HTTP {status})", file=sys.stderr)
         sys.exit(1)
     branch = data["head"]["ref"]
     sha = data["head"]["sha"]
-    print(f"PR #{pr_number}: branch={branch}, sha={sha}")
+    print(f"PR #{pr_number}: branch={branch}, sha={sha}", file=sys.stderr)
     return branch, sha

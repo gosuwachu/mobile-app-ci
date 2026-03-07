@@ -8,10 +8,29 @@ pipeline {
                 }
                 withCredentials([usernamePassword(credentialsId: 'github-app',
                         usernameVariable: 'GH_APP', passwordVariable: 'GH_TOKEN')]) {
-                    sh """./ci-cli android build \
-                        --commit-sha ${env.COMMIT_SHA} \
-                        --build-url ${env.BUILD_URL}"""
+                    script {
+                        env.CONTEXT_JSON = sh(
+                            script: """./ci-cli android build \
+                                --commit-sha ${env.COMMIT_SHA} \
+                                --build-url ${env.BUILD_URL}""",
+                            returnStdout: true
+                        ).trim()
+                    }
                 }
+            }
+        }
+        stage('Trigger Android Deploy') {
+            steps {
+                build job: 'pipeline/omnibus',
+                      parameters: [
+                          string(name: 'BRANCH_NAME', value: env.BRANCH_NAME),
+                          string(name: 'COMMIT_SHA', value: env.COMMIT_SHA),
+                          string(name: 'CHANGE_ID', value: env.CHANGE_ID ?: ''),
+                          string(name: 'JENKINSFILE', value: 'ci/android/android-deploy.Jenkinsfile'),
+                          string(name: 'CI_BRANCH', value: env.CI_BRANCH ?: 'main'),
+                          string(name: 'CONTEXT_JSON', value: env.CONTEXT_JSON)
+                      ],
+                      wait: true
             }
         }
     }

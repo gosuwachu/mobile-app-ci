@@ -1,3 +1,4 @@
+import json
 from unittest.mock import patch
 
 from company.ci.steps import run_step, STEPS
@@ -15,16 +16,43 @@ class TestRunStep:
         assert calls[0].args[2] == "pending"
         assert calls[1].args[2] == "success"
 
-        output = capsys.readouterr().out
-        assert "Building iOS..." in output
+        captured = capsys.readouterr()
+        assert "Building iOS..." in captured.err
+        result = json.loads(captured.out.strip())
+        assert result["platform"] == "ios"
+        assert result["step"] == "build"
+        assert result["context"] == "ci/ios-build"
+        assert result["commit_sha"] == "sha123"
 
     @patch("company.ci.steps.set_commit_status")
     @patch("company.ci.steps.checkout_app")
     def test_runs_android_deploy(self, _mock_checkout, _mock_status, capsys):
         run_step("android", "deploy", "sha456", "token", "http://build/2")
 
-        output = capsys.readouterr().out
-        assert "Deploying Android..." in output
+        captured = capsys.readouterr()
+        assert "Deploying Android..." in captured.err
+        result = json.loads(captured.out.strip())
+        assert result["platform"] == "android"
+        assert result["step"] == "deploy"
+
+    @patch("company.ci.steps.set_commit_status")
+    @patch("company.ci.steps.checkout_app")
+    def test_outputs_json_with_env_vars(self, _mock_checkout, _mock_status, capsys):
+        with patch.dict("os.environ", {"JOB_NAME": "pipeline/omnibus", "BUILD_NUMBER": "42"}):
+            run_step("ios", "build", "sha1", "tok", "http://build/1")
+
+        result = json.loads(capsys.readouterr().out.strip())
+        assert result["job_name"] == "pipeline/omnibus"
+        assert result["build_number"] == "42"
+        assert result["build_url"] == "http://build/1"
+
+    @patch("company.ci.steps.set_commit_status")
+    @patch("company.ci.steps.checkout_app")
+    def test_context_json_logged(self, _mock_checkout, _mock_status, capsys):
+        ctx = json.dumps({"job_name": "pipeline/omnibus", "build_number": "99"})
+        run_step("ios", "deploy", "sha1", "tok", "http://build/1", context_json=ctx)
+
+        assert "Triggered by: pipeline/omnibus #99" in capsys.readouterr().err
 
     def test_all_steps_have_entries(self):
         expected = [
