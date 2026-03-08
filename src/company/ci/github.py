@@ -39,10 +39,13 @@ def dashboard_check_url(build_url, context, state):
     dashboard_url = os.environ.get("DASHBOARD_URL", "")
     if not dashboard_url:
         return build_url
+    change_id = os.environ.get("CHANGE_ID", "")
+    from_page = f"/pulls/{change_id}" if change_id else "/main"
     params = urllib.parse.urlencode({
         "build": build_url,
         "name": context,
         "state": state,
+        "from": from_page,
     })
     return f"{dashboard_url.rstrip('/')}/checks?{params}"
 

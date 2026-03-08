@@ -104,6 +104,12 @@ class TestDashboardCheckUrl:
         assert "build=http" in result
         assert "name=ci" in result
         assert "state=success" in result
+        assert "from=%2Fmain" in result
+
+    def test_includes_pr_from_param(self):
+        with patch.dict(os.environ, {"DASHBOARD_URL": "http://localhost:3000", "CHANGE_ID": "42"}):
+            result = dashboard_check_url("http://jenkins/build/1", "ci/ios-build", "success")
+        assert "from=%2Fpulls%2F42" in result
 
     def test_strips_trailing_slash(self):
         with patch.dict(os.environ, {"DASHBOARD_URL": "http://localhost:3000/"}):
