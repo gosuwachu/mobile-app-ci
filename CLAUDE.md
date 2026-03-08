@@ -39,7 +39,7 @@ CI step definitions and shared tooling for the [mobile-app](https://github.com/g
 Child Jenkinsfiles are minimal wrappers that call `./ci-cli <platform> <step>` with explicit arguments. The CLI handles:
 1. Checking out the app repo at the pinned `COMMIT_SHA`
 2. Setting GitHub commit status to `pending`
-3. Running the step (currently prints a placeholder message)
+3. Running the platform build script from the app repo (`{platform}/{platform}_build/{script}.sh`)
 4. Setting GitHub commit status to `success` or `failure`
 
 The omnibus job in Jenkins (`mobile-app-support/omnibus`) checks out this repo at `main` and runs whichever Jenkinsfile is specified by the `JENKINSFILE` parameter.
@@ -63,9 +63,11 @@ GH_TOKEN=<token> ./ci-cli ios build --commit-sha <sha> --build-url <url>
 ## Adding a New CI Step
 
 1. Add entry to `STEPS` dict in `src/company/ci/steps.py`
-2. Create Jenkinsfile in `ci/<platform>/<platform>-<step>.Jenkinsfile`
-3. Add the step to the trigger orchestrator in the app repo (`ci/trigger.Jenkinsfile`)
-4. Add the context name to `IOS_CONTEXTS` or `ANDROID_CONTEXTS` in the trigger
+2. Add entry to `STEP_SCRIPTS` in `steps.py` mapping step name to script filename
+3. Create build script in app repo: `{platform}/{platform}_build/{script}.sh`
+4. Create Jenkinsfile in `ci/<platform>/<platform>-<step>.Jenkinsfile`
+5. Add the step to the trigger orchestrator in the app repo (`ci/trigger.Jenkinsfile`)
+6. Add the context name to `IOS_CONTEXTS` or `ANDROID_CONTEXTS` in the trigger
 
 ## Linting
 

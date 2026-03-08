@@ -1,7 +1,9 @@
 import json
 import os
+import subprocess
 import sys
 
+from company.ci.checkout import APP_DIR
 from company.ci.checkout import checkout_app
 from company.ci.github import check_collaborator, resolve_pr, set_commit_status
 
@@ -61,6 +63,29 @@ STEPS = {
     ),
 }
 
+STEP_SCRIPTS = {
+    "build": "build.sh",
+    "unit-tests": "unit-tests.sh",
+    "linter": "lint.sh",
+    "ui-tests": "ui-tests.sh",
+}
+
+SCRIPT_DIRS = {
+    "ios": "ios/ios_build",
+    "android": "android/android_build",
+}
+
+
+def _run_build_script(platform, step):
+    script = STEP_SCRIPTS.get(step)
+    if script is None:
+        raise FileNotFoundError(f"No build script defined for step '{step}'")
+    script_dir = SCRIPT_DIRS[platform]
+    script_path = APP_DIR / script_dir / script
+    if not script_path.exists():
+        raise FileNotFoundError(f"Build script not found: {script_path}")
+    subprocess.run(["bash", str(script_path)], check=True, cwd=APP_DIR)
+
 
 def run_step(platform, step, commit_sha, gh_token, build_url, context_json=None, no_status=False):  # pylint: disable=too-many-arguments,too-many-positional-arguments
     _stage_name, context, message = STEPS[(platform, step)]
@@ -75,6 +100,7 @@ def run_step(platform, step, commit_sha, gh_token, build_url, context_json=None,
         set_commit_status(commit_sha, context, "pending", "Running...", gh_token, build_url)
     try:
         print(message, file=sys.stderr)
+        _run_build_script(platform, step)
         if not no_status:
             set_commit_status(
                 commit_sha, context, "success", "Passed", gh_token, build_url
