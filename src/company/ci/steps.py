@@ -79,7 +79,7 @@ SCRIPT_DIRS = {
 def _run_build_script(platform, step):
     script = STEP_SCRIPTS.get(step)
     if script is None:
-        raise FileNotFoundError(f"No build script defined for step '{step}'")
+        return
     script_dir = SCRIPT_DIRS[platform]
     rel_path = f"{script_dir}/{script}"
     script_path = APP_DIR / script_dir / script
