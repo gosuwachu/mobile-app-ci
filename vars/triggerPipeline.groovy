@@ -47,6 +47,24 @@ def detectPlatforms() {
     }
 }
 
+def publishJenkinsStatus(String state, String description) {
+    def sha = env.GIT_COMMIT ?: sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+    def dashboardUrl = env.DASHBOARD_URL ?: ''
+    def targetUrl = env.BUILD_URL
+    if (dashboardUrl) {
+        def page = env.CHANGE_ID ? "/pulls/${env.CHANGE_ID}" : '/main'
+        targetUrl = "${dashboardUrl}${page}"
+    }
+    withCredentials([usernamePassword(credentialsId: 'github-app',
+            usernameVariable: 'GH_APP', passwordVariable: 'GH_TOKEN')]) {
+        sh """curl -s -X POST \
+            -H "Authorization: token \$GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -d '{"state":"${state}","context":"Jenkins","description":"${description}","target_url":"${targetUrl}"}' \
+            "https://api.github.com/repos/gosuwachu/mobile-app/statuses/${sha}" """
+    }
+}
+
 def publishSkippedStatuses(String platform) {
     def ciCli = sh(script: "ls ${env.WORKSPACE}@libs/*/ci-cli", returnStdout: true).trim()
     def sha = env.GIT_COMMIT ?: sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
@@ -85,6 +103,7 @@ def call() {
                 steps {
                     script {
                         echo "Starting Mobile CI/CD Pipeline on branch: ${env.BRANCH_TO_BUILD}"
+                        publishJenkinsStatus('pending', 'Running...')
 
                         def ciCli = sh(script: "ls ${env.WORKSPACE}@libs/*/ci-cli", returnStdout: true).trim()
                         currentBuild.displayName = sh(script: "${ciCli} build-name", returnStdout: true).trim()
@@ -107,7 +126,7 @@ def call() {
                 }
             }
 
-            stage('Checks') {
+            stage('CI Checks') {
                 parallel {
                     stage('iOS Build') {
                         when { expression { env.RUN_IOS == 'true' } }
@@ -136,6 +155,15 @@ def call() {
                 }
             }
 
+        }
+
+        post {
+            success {
+                publishJenkinsStatus('success', 'Passed')
+            }
+            failure {
+                publishJenkinsStatus('failure', 'Failed')
+            }
         }
     }
 }

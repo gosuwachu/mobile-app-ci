@@ -1,9 +1,10 @@
 from unittest.mock import patch, MagicMock
 import json
+import os
 
 import pytest
 
-from company.ci.github import github_api, set_commit_status, check_collaborator
+from company.ci.github import github_api, set_commit_status, check_collaborator, dashboard_check_url
 
 
 class TestGithubApi:
@@ -65,6 +66,19 @@ class TestSetCommitStatus:
         )
 
     @patch("company.ci.github.github_api")
+    @patch.dict(os.environ, {"DASHBOARD_URL": "http://localhost:3000"})
+    def test_uses_dashboard_url_when_set(self, mock_api):
+        mock_api.return_value = (201, {"id": 1})
+
+        set_commit_status(
+            "abc123", "ci/ios-build", "success", "Passed", "token", "http://build/1"
+        )
+
+        call_data = mock_api.call_args[1]["data"]
+        assert "http://localhost:3000/checks?" in call_data["target_url"]
+        assert "build=http" in call_data["target_url"]
+
+    @patch("company.ci.github.github_api")
     def test_warns_on_failure(self, mock_api, capsys):
         mock_api.return_value = (422, {"message": "not found"})
 
@@ -74,6 +88,27 @@ class TestSetCommitStatus:
 
         output = capsys.readouterr().err
         assert "WARNING" in output
+
+
+class TestDashboardCheckUrl:
+    def test_returns_build_url_without_env(self):
+        with patch.dict(os.environ, {}, clear=True):
+            os.environ.pop("DASHBOARD_URL", None)
+            result = dashboard_check_url("http://jenkins/build/1", "ci/ios-build", "success")
+        assert result == "http://jenkins/build/1"
+
+    def test_returns_dashboard_url_with_env(self):
+        with patch.dict(os.environ, {"DASHBOARD_URL": "http://localhost:3000"}):
+            result = dashboard_check_url("http://jenkins/build/1", "ci/ios-build", "success")
+        assert "http://localhost:3000/checks?" in result
+        assert "build=http" in result
+        assert "name=ci" in result
+        assert "state=success" in result
+
+    def test_strips_trailing_slash(self):
+        with patch.dict(os.environ, {"DASHBOARD_URL": "http://localhost:3000/"}):
+            result = dashboard_check_url("http://jenkins/build/1", "ci/ios-build", "pending")
+        assert result.startswith("http://localhost:3000/checks?")
 
 
 class TestCheckCollaborator:

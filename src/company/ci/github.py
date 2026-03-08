@@ -1,5 +1,7 @@
 import json
+import os
 import sys
+import urllib.parse
 import urllib.request
 import urllib.error
 
@@ -29,7 +31,24 @@ def github_api(path, token, method="GET", data=None):
         return e.code, resp_body
 
 
+def dashboard_check_url(build_url, context, state):
+    """Transform a Jenkins build URL into a CI dashboard check page URL.
+
+    Returns the original build_url if DASHBOARD_URL is not set.
+    """
+    dashboard_url = os.environ.get("DASHBOARD_URL", "")
+    if not dashboard_url:
+        return build_url
+    params = urllib.parse.urlencode({
+        "build": build_url,
+        "name": context,
+        "state": state,
+    })
+    return f"{dashboard_url.rstrip('/')}/checks?{params}"
+
+
 def set_commit_status(sha, context, state, description, token, build_url):  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    target_url = dashboard_check_url(build_url, context, state)
     status, resp = github_api(
         f"/repos/{GITHUB_OWNER}/{GITHUB_REPO}/statuses/{sha}",
         token,
@@ -38,7 +57,7 @@ def set_commit_status(sha, context, state, description, token, build_url):  # py
             "state": state,
             "context": context,
             "description": description,
-            "target_url": build_url,
+            "target_url": target_url,
         },
     )
     if status >= 300:
