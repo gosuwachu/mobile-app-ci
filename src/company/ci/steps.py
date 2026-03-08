@@ -2,64 +2,35 @@ import json
 import os
 import subprocess
 import sys
+from contextlib import contextmanager
+from dataclasses import dataclass
 
 from company.ci.checkout import APP_DIR
 from company.ci.checkout import checkout_app
 from company.ci.github import check_collaborator, resolve_pr, set_commit_status
 
+
+@dataclass
+class StepConfig:
+    name: str
+    context: str
+
+
 STEPS = {
-    ("ios", "build"): ("iOS Build", "ci/ios-build", "Building iOS..."),
-    ("ios", "unit-tests"): (
-        "iOS Unit Tests",
-        "ci/ios-unit-tests",
-        "Running iOS unit tests...",
-    ),
-    ("ios", "linter"): ("iOS Linter", "ci/ios-linter", "Running iOS linter..."),
-    ("ios", "deploy"): ("iOS Deploy", "ci/ios-deploy", "Deploying iOS..."),
-    ("ios", "ui-tests"): (
-        "iOS UI Tests",
-        "ci/ios-ui-tests",
-        "Running iOS UI tests...",
-    ),
-    ("android", "build"): (
-        "Android Build",
-        "ci/android-build",
-        "Building Android...",
-    ),
-    ("android", "unit-tests"): (
-        "Android Unit Tests",
-        "ci/android-unit-tests",
-        "Running Android unit tests...",
-    ),
-    ("android", "linter"): (
-        "Android Linter",
-        "ci/android-linter",
-        "Running Android linter...",
-    ),
-    ("android", "deploy"): (
-        "Android Deploy",
-        "ci/android-deploy",
-        "Deploying Android...",
-    ),
-    ("ios", "alpha-build"): (
-        "iOS Alpha Build",
-        "ci/ios-alpha-build",
-        "Alpha building iOS...",
-    ),
-    ("android", "alpha-build"): (
-        "Android Alpha Build",
-        "ci/android-alpha-build",
-        "Alpha building Android...",
-    ),
-    ("ios", "production-build"): (
-        "iOS Production Build",
-        "ci/ios-production-build",
-        "Production building iOS...",
-    ),
-    ("android", "production-build"): (
-        "Android Production Build",
-        "ci/android-production-build",
-        "Production building Android...",
+    ("ios", "build"): StepConfig("iOS Build", "ci/ios-build"),
+    ("ios", "unit-tests"): StepConfig("iOS Unit Tests", "ci/ios-unit-tests"),
+    ("ios", "linter"): StepConfig("iOS Linter", "ci/ios-linter"),
+    ("ios", "deploy"): StepConfig("iOS Deploy", "ci/ios-deploy"),
+    ("ios", "ui-tests"): StepConfig("iOS UI Tests", "ci/ios-ui-tests"),
+    ("android", "build"): StepConfig("Android Build", "ci/android-build"),
+    ("android", "unit-tests"): StepConfig("Android Unit Tests", "ci/android-unit-tests"),
+    ("android", "linter"): StepConfig("Android Linter", "ci/android-linter"),
+    ("android", "deploy"): StepConfig("Android Deploy", "ci/android-deploy"),
+    ("ios", "alpha-build"): StepConfig("iOS Alpha Build", "ci/ios-alpha-build"),
+    ("android", "alpha-build"): StepConfig("Android Alpha Build", "ci/android-alpha-build"),
+    ("ios", "production-build"): StepConfig("iOS Production Build", "ci/ios-production-build"),
+    ("android", "production-build"): StepConfig(
+        "Android Production Build", "ci/android-production-build",
     ),
 }
 
@@ -88,31 +59,21 @@ def _run_build_script(platform, step):
     subprocess.run(["bash", rel_path], check=True, cwd=APP_DIR)
 
 
-def run_step(platform, step, commit_sha, gh_token, build_url, context_json=None, no_status=False):  # pylint: disable=too-many-arguments,too-many-positional-arguments
-    _stage_name, context, message = STEPS[(platform, step)]
-
-    if context_json:
-        ctx = json.loads(context_json)
-        print(f"Triggered by: {ctx['job_name']} #{ctx['build_number']}", file=sys.stderr)
-
-    checkout_app(commit_sha, gh_token)
-
+@contextmanager
+def commit_status(commit_sha, context, gh_token, build_url, no_status=False):
     if not no_status:
         set_commit_status(commit_sha, context, "pending", "Running...", gh_token, build_url)
     try:
-        print(message, file=sys.stderr)
-        _run_build_script(platform, step)
+        yield
         if not no_status:
-            set_commit_status(
-                commit_sha, context, "success", "Passed", gh_token, build_url
-            )
+            set_commit_status(commit_sha, context, "success", "Passed", gh_token, build_url)
     except Exception as e:
         if not no_status:
-            set_commit_status(
-                commit_sha, context, "failure", f"Failed: {e}", gh_token, build_url
-            )
+            set_commit_status(commit_sha, context, "failure", f"Failed: {e}", gh_token, build_url)
         raise
 
+
+def _step_result_json(platform, step, context, commit_sha, build_url):
     print(json.dumps({
         "job_name": os.environ.get("JOB_NAME", ""),
         "build_number": os.environ.get("BUILD_NUMBER", ""),
@@ -122,6 +83,54 @@ def run_step(platform, step, commit_sha, gh_token, build_url, context_json=None,
         "step": step,
         "context": context,
     }))
+
+
+def run_build(platform, commit_sha, gh_token, build_url, no_status=False):
+    step = STEPS[(platform, "build")]
+    with commit_status(commit_sha, step.context, gh_token, build_url, no_status):
+        checkout_app(commit_sha, gh_token)
+        _run_build_script(platform, "build")
+    _step_result_json(platform, "build", step.context, commit_sha, build_url)
+
+
+def run_unit_tests(platform, commit_sha, gh_token, build_url, no_status=False):
+    step = STEPS[(platform, "unit-tests")]
+    with commit_status(commit_sha, step.context, gh_token, build_url, no_status):
+        checkout_app(commit_sha, gh_token)
+        _run_build_script(platform, "unit-tests")
+    _step_result_json(platform, "unit-tests", step.context, commit_sha, build_url)
+
+
+def run_linter(platform, commit_sha, gh_token, build_url, no_status=False):
+    step = STEPS[(platform, "linter")]
+    with commit_status(commit_sha, step.context, gh_token, build_url, no_status):
+        checkout_app(commit_sha, gh_token)
+        _run_build_script(platform, "linter")
+    _step_result_json(platform, "linter", step.context, commit_sha, build_url)
+
+
+def run_deploy(platform, commit_sha, gh_token, build_url, context_json=None, no_status=False):  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    step = STEPS[(platform, "deploy")]
+    if context_json:
+        ctx = json.loads(context_json)
+        print(f"Triggered by: {ctx['job_name']} #{ctx['build_number']}", file=sys.stderr)
+    with commit_status(commit_sha, step.context, gh_token, build_url, no_status):
+        pass
+    _step_result_json(platform, "deploy", step.context, commit_sha, build_url)
+
+
+def run_alpha_build(platform, commit_sha, gh_token, build_url):
+    step = STEPS[(platform, "alpha-build")]
+    checkout_app(commit_sha, gh_token)
+    _run_build_script(platform, "alpha-build")
+    _step_result_json(platform, "alpha-build", step.context, commit_sha, build_url)
+
+
+def run_production_build(platform, commit_sha, gh_token, build_url):
+    step = STEPS[(platform, "production-build")]
+    checkout_app(commit_sha, gh_token)
+    _run_build_script(platform, "production-build")
+    _step_result_json(platform, "production-build", step.context, commit_sha, build_url)
 
 
 def run_ui_tests(args):
@@ -137,4 +146,10 @@ def run_ui_tests(args):
             print("Either --pr-number or --commit-sha is required", file=sys.stderr)
             sys.exit(1)
 
-    run_step("ios", "ui-tests", commit_sha, args.gh_token, args.build_url)
+    step = STEPS[("ios", "ui-tests")]
+    no_status = getattr(args, "no_status", False)
+    with commit_status(commit_sha, step.context, args.gh_token, args.build_url, no_status):
+        checkout_app(commit_sha, args.gh_token)
+
+        _run_build_script("ios", "ui-tests")
+    _step_result_json("ios", "ui-tests", step.context, commit_sha, args.build_url)

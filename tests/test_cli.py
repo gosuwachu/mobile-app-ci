@@ -5,7 +5,7 @@ from company.ci.cli import main
 
 
 class TestCliParsing:
-    @patch("company.ci.cli.run_step")
+    @patch("company.ci.steps.run_build")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})
     def test_ios_build(self, mock_run):
         argv = [
@@ -14,9 +14,9 @@ class TestCliParsing:
         ]
         with patch("sys.argv", argv):
             main()
-        mock_run.assert_called_once_with("ios", "build", "abc", "tok", "http://b", None, False)
+        mock_run.assert_called_once_with("ios", "abc", "tok", "http://b", False)
 
-    @patch("company.ci.cli.run_step")
+    @patch("company.ci.steps.run_linter")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})
     def test_android_linter(self, mock_run):
         argv = [
@@ -25,9 +25,9 @@ class TestCliParsing:
         ]
         with patch("sys.argv", argv):
             main()
-        mock_run.assert_called_once_with("android", "linter", "def", "tok", "http://b", None, False)
+        mock_run.assert_called_once_with("android", "def", "tok", "http://b", False)
 
-    @patch("company.ci.cli.run_step")
+    @patch("company.ci.steps.run_deploy")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})
     def test_deploy_with_context_json(self, mock_run):
         ctx = '{"job_name": "mobile-app-support/omnibus", "build_number": "42"}'
@@ -38,9 +38,9 @@ class TestCliParsing:
         ]
         with patch("sys.argv", argv):
             main()
-        mock_run.assert_called_once_with("ios", "deploy", "abc", "tok", "http://b", ctx, False)
+        mock_run.assert_called_once_with("ios", "abc", "tok", "http://b", ctx, False)
 
-    @patch("company.ci.cli.run_step")
+    @patch("company.ci.steps.run_build")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})
     def test_no_status_flag(self, mock_run):
         argv = [
@@ -50,9 +50,9 @@ class TestCliParsing:
         ]
         with patch("sys.argv", argv):
             main()
-        mock_run.assert_called_once_with("ios", "build", "abc", "tok", "http://b", None, True)
+        mock_run.assert_called_once_with("ios", "abc", "tok", "http://b", True)
 
-    @patch("company.ci.cli.run_step")
+    @patch("company.ci.steps.run_alpha_build")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})
     def test_alpha_build(self, mock_run):
         argv = [
@@ -61,11 +61,9 @@ class TestCliParsing:
         ]
         with patch("sys.argv", argv):
             main()
-        mock_run.assert_called_once_with(
-            "ios", "alpha-build", "abc", "tok", "http://b", None, False,
-        )
+        mock_run.assert_called_once_with("ios", "abc", "tok", "http://b")
 
-    @patch("company.ci.cli.run_step")
+    @patch("company.ci.steps.run_production_build")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})
     def test_production_build(self, mock_run):
         argv = [
@@ -74,9 +72,7 @@ class TestCliParsing:
         ]
         with patch("sys.argv", argv):
             main()
-        mock_run.assert_called_once_with(
-            "ios", "production-build", "abc", "tok", "http://b", None, False,
-        )
+        mock_run.assert_called_once_with("ios", "abc", "tok", "http://b")
 
     @patch("company.ci.cli.run_ui_tests")
     @patch.dict("os.environ", {"GH_TOKEN": "tok"})

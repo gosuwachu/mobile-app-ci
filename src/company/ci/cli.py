@@ -5,10 +5,20 @@ from company.ci.build_name import get_build_name
 from company.ci.changes import run_detect_changes
 from company.ci.collaborator import run_check_collaborator
 from company.ci.skip_statuses import run_skip_statuses
-from company.ci.steps import STEPS, run_step, run_ui_tests
+from company.ci import steps
+from company.ci.steps import STEPS, run_ui_tests
+
+STEP_FUNCTIONS = {
+    "build": "run_build",
+    "unit-tests": "run_unit_tests",
+    "linter": "run_linter",
+    "deploy": "run_deploy",
+    "alpha-build": "run_alpha_build",
+    "production-build": "run_production_build",
+}
 
 
-def main():
+def main():  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     parser = argparse.ArgumentParser(description="CI CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -75,9 +85,16 @@ def main():
     elif args.command == "ios" and args.step == "ui-tests":
         run_ui_tests(args)
     else:
-        context_json = getattr(args, "context_json", None)
-        no_status = getattr(args, "no_status", False)
-        run_step(
-            args.command, args.step, args.commit_sha,
-            args.gh_token, args.build_url, context_json, no_status,
-        )
+        step_fn = getattr(steps, STEP_FUNCTIONS[args.step])
+        if args.step == "deploy":
+            no_status = getattr(args, "no_status", False)
+            context_json = getattr(args, "context_json", None)
+            step_fn(
+                args.command, args.commit_sha, args.gh_token,
+                args.build_url, context_json, no_status,
+            )
+        elif args.step in ("alpha-build", "production-build"):
+            step_fn(args.command, args.commit_sha, args.gh_token, args.build_url)
+        else:
+            no_status = getattr(args, "no_status", False)
+            step_fn(args.command, args.commit_sha, args.gh_token, args.build_url, no_status)
