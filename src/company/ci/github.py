@@ -31,27 +31,29 @@ def github_api(path, token, method="GET", data=None):
         return e.code, resp_body
 
 
-def dashboard_check_url(build_url, context, state):
-    """Transform a Jenkins build URL into a CI dashboard check page URL.
+def dashboard_check_url(commit_sha, context):
+    """Build a CI dashboard check page URL from environment variables.
 
-    Returns the original build_url if DASHBOARD_URL is not set.
+    Returns an empty string if DASHBOARD_URL is not set.
     """
     dashboard_url = os.environ.get("DASHBOARD_URL", "")
     if not dashboard_url:
-        return build_url
-    change_id = os.environ.get("CHANGE_ID", "")
-    from_page = f"/pulls/{change_id}" if change_id else "/main"
-    params = urllib.parse.urlencode({
-        "build": build_url,
+        return ""
+    query: dict[str, str] = {
+        "sha": commit_sha,
+        "job": os.environ.get("JOB_NAME", ""),
+        "build": os.environ.get("BUILD_NUMBER", ""),
         "name": context,
-        "state": state,
-        "from": from_page,
-    })
+    }
+    change_id = os.environ.get("CHANGE_ID", "")
+    if change_id:
+        query["pr"] = change_id
+    params = urllib.parse.urlencode(query)
     return f"{dashboard_url.rstrip('/')}/checks?{params}"
 
 
 def set_commit_status(sha, context, state, description, token, build_url):  # pylint: disable=too-many-arguments,too-many-positional-arguments
-    target_url = dashboard_check_url(build_url, context, state)
+    target_url = dashboard_check_url(sha, context) or build_url
     status, resp = github_api(
         f"/repos/{GITHUB_OWNER}/{GITHUB_REPO}/statuses/{sha}",
         token,

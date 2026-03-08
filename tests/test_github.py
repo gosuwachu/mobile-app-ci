@@ -66,7 +66,11 @@ class TestSetCommitStatus:
         )
 
     @patch("company.ci.github.github_api")
-    @patch.dict(os.environ, {"DASHBOARD_URL": "http://localhost:3000"})
+    @patch.dict(os.environ, {
+        "DASHBOARD_URL": "http://localhost:3000",
+        "JOB_NAME": "mobile-app-support/omnibus",
+        "BUILD_NUMBER": "42",
+    })
     def test_uses_dashboard_url_when_set(self, mock_api):
         mock_api.return_value = (201, {"id": 1})
 
@@ -76,7 +80,9 @@ class TestSetCommitStatus:
 
         call_data = mock_api.call_args[1]["data"]
         assert "http://localhost:3000/checks?" in call_data["target_url"]
-        assert "build=http" in call_data["target_url"]
+        assert "sha=abc123" in call_data["target_url"]
+        assert "job=mobile-app-support" in call_data["target_url"]
+        assert "build=42" in call_data["target_url"]
 
     @patch("company.ci.github.github_api")
     def test_warns_on_failure(self, mock_api, capsys):
@@ -91,29 +97,51 @@ class TestSetCommitStatus:
 
 
 class TestDashboardCheckUrl:
-    def test_returns_build_url_without_env(self):
+    def test_returns_empty_without_env(self):
         with patch.dict(os.environ, {}, clear=True):
             os.environ.pop("DASHBOARD_URL", None)
-            result = dashboard_check_url("http://jenkins/build/1", "ci/ios-build", "success")
-        assert result == "http://jenkins/build/1"
+            result = dashboard_check_url("abc123", "ci/ios-build")
+        assert result == ""
 
     def test_returns_dashboard_url_with_env(self):
-        with patch.dict(os.environ, {"DASHBOARD_URL": "http://localhost:3000"}):
-            result = dashboard_check_url("http://jenkins/build/1", "ci/ios-build", "success")
+        with patch.dict(os.environ, {
+            "DASHBOARD_URL": "http://localhost:3000",
+            "JOB_NAME": "mobile-app-support/omnibus",
+            "BUILD_NUMBER": "7",
+        }):
+            result = dashboard_check_url("abc123", "ci/ios-build")
         assert "http://localhost:3000/checks?" in result
-        assert "build=http" in result
+        assert "sha=abc123" in result
+        assert "job=mobile-app-support" in result
+        assert "build=7" in result
         assert "name=ci" in result
-        assert "state=success" in result
-        assert "from=%2Fmain" in result
 
-    def test_includes_pr_from_param(self):
-        with patch.dict(os.environ, {"DASHBOARD_URL": "http://localhost:3000", "CHANGE_ID": "42"}):
-            result = dashboard_check_url("http://jenkins/build/1", "ci/ios-build", "success")
-        assert "from=%2Fpulls%2F42" in result
+    def test_includes_pr_param(self):
+        with patch.dict(os.environ, {
+            "DASHBOARD_URL": "http://localhost:3000",
+            "CHANGE_ID": "42",
+            "JOB_NAME": "x",
+            "BUILD_NUMBER": "1",
+        }):
+            result = dashboard_check_url("abc123", "ci/ios-build")
+        assert "pr=42" in result
+
+    def test_no_pr_param_without_change_id(self):
+        with patch.dict(os.environ, {
+            "DASHBOARD_URL": "http://localhost:3000",
+            "JOB_NAME": "x",
+            "BUILD_NUMBER": "1",
+        }, clear=True):
+            result = dashboard_check_url("abc123", "ci/ios-build")
+        assert "pr=" not in result
 
     def test_strips_trailing_slash(self):
-        with patch.dict(os.environ, {"DASHBOARD_URL": "http://localhost:3000/"}):
-            result = dashboard_check_url("http://jenkins/build/1", "ci/ios-build", "pending")
+        with patch.dict(os.environ, {
+            "DASHBOARD_URL": "http://localhost:3000/",
+            "JOB_NAME": "x",
+            "BUILD_NUMBER": "1",
+        }):
+            result = dashboard_check_url("abc123", "ci/ios-build")
         assert result.startswith("http://localhost:3000/checks?")
 
 
