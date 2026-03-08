@@ -34,29 +34,12 @@ STEPS = {
     ),
 }
 
-STEP_SCRIPTS = {
-    "build": "build.sh",
-    "unit-tests": "unit-tests.sh",
-    "linter": "lint.sh",
-    "ui-tests": "ui-tests.sh",
-}
 
-SCRIPT_DIRS = {
-    "ios": "ios/ios_build",
-    "android": "android/android_build",
-}
-
-
-def _run_build_script(platform, step):
-    script = STEP_SCRIPTS.get(step)
-    if script is None:
-        return
-    script_dir = SCRIPT_DIRS[platform]
-    rel_path = f"{script_dir}/{script}"
-    script_path = APP_DIR / script_dir / script
-    if not script_path.exists():
-        raise FileNotFoundError(f"Build script not found: {script_path}")
-    subprocess.run(["bash", rel_path], check=True, cwd=APP_DIR)
+def _run_script(script_path):
+    full_path = APP_DIR / script_path
+    if not full_path.exists():
+        raise FileNotFoundError(f"Build script not found: {full_path}")
+    subprocess.run(["bash", script_path], check=True, cwd=APP_DIR)
 
 
 @contextmanager
@@ -89,7 +72,7 @@ def run_build(platform, commit_sha, gh_token, build_url, no_status=False):
     step = STEPS[(platform, "build")]
     with commit_status(commit_sha, step.context, gh_token, build_url, no_status):
         checkout_app(commit_sha, gh_token)
-        _run_build_script(platform, "build")
+        _run_script(f"{platform}/{platform}_build/build.sh")
     _step_result_json(platform, "build", step.context, commit_sha, build_url)
 
 
@@ -97,7 +80,7 @@ def run_unit_tests(platform, commit_sha, gh_token, build_url, no_status=False):
     step = STEPS[(platform, "unit-tests")]
     with commit_status(commit_sha, step.context, gh_token, build_url, no_status):
         checkout_app(commit_sha, gh_token)
-        _run_build_script(platform, "unit-tests")
+        _run_script(f"{platform}/{platform}_build/unit-tests.sh")
     _step_result_json(platform, "unit-tests", step.context, commit_sha, build_url)
 
 
@@ -105,7 +88,7 @@ def run_linter(platform, commit_sha, gh_token, build_url, no_status=False):
     step = STEPS[(platform, "linter")]
     with commit_status(commit_sha, step.context, gh_token, build_url, no_status):
         checkout_app(commit_sha, gh_token)
-        _run_build_script(platform, "linter")
+        _run_script(f"{platform}/{platform}_build/lint.sh")
     _step_result_json(platform, "linter", step.context, commit_sha, build_url)
 
 
@@ -122,14 +105,14 @@ def run_deploy(platform, commit_sha, gh_token, build_url, context_json=None, no_
 def run_alpha_build(platform, commit_sha, gh_token, build_url):
     step = STEPS[(platform, "alpha-build")]
     checkout_app(commit_sha, gh_token)
-    _run_build_script(platform, "alpha-build")
+    _run_script(f"{platform}/{platform}_build/build.sh")
     _step_result_json(platform, "alpha-build", step.context, commit_sha, build_url)
 
 
 def run_production_build(platform, commit_sha, gh_token, build_url):
     step = STEPS[(platform, "production-build")]
     checkout_app(commit_sha, gh_token)
-    _run_build_script(platform, "production-build")
+    _run_script(f"{platform}/{platform}_build/build.sh")
     _step_result_json(platform, "production-build", step.context, commit_sha, build_url)
 
 
@@ -150,6 +133,5 @@ def run_ui_tests(args):
     no_status = getattr(args, "no_status", False)
     with commit_status(commit_sha, step.context, args.gh_token, args.build_url, no_status):
         checkout_app(commit_sha, args.gh_token)
-
-        _run_build_script("ios", "ui-tests")
+        _run_script("ios/ios_build/ui-tests.sh")
     _step_result_json("ios", "ui-tests", step.context, commit_sha, args.build_url)

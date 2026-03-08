@@ -35,14 +35,14 @@ class TestCommitStatus:
 
 
 class TestRunBuild:
-    @patch("company.ci.steps._run_build_script")
+    @patch("company.ci.steps._run_script")
     @patch("company.ci.steps.set_commit_status")
     @patch("company.ci.steps.checkout_app")
     def test_runs_ios_build(self, mock_checkout, mock_status, mock_script, capsys):
         run_build("ios", "sha123", "token", "http://build/1")
 
         mock_checkout.assert_called_once_with("sha123", "token")
-        mock_script.assert_called_once_with("ios", "build")
+        mock_script.assert_called_once_with("ios/ios_build/build.sh")
         assert mock_status.call_count == 2
         assert mock_status.call_args_list[0].args[2] == "pending"
         assert mock_status.call_args_list[1].args[2] == "success"
@@ -53,7 +53,7 @@ class TestRunBuild:
         assert result["context"] == "ci/ios-build"
         assert result["commit_sha"] == "sha123"
 
-    @patch("company.ci.steps._run_build_script")
+    @patch("company.ci.steps._run_script")
     @patch("company.ci.steps.set_commit_status")
     @patch("company.ci.steps.checkout_app")
     def test_no_status_skips_commit_status(self, mock_checkout, mock_status, _mock_script, capsys):
@@ -66,7 +66,7 @@ class TestRunBuild:
         assert result["platform"] == "ios"
         assert result["step"] == "build"
 
-    @patch("company.ci.steps._run_build_script")
+    @patch("company.ci.steps._run_script")
     @patch("company.ci.steps.set_commit_status")
     @patch("company.ci.steps.checkout_app")
     def test_outputs_json_with_env_vars(self, _mock_checkout, _mock_status, _mock_script, capsys):
@@ -98,7 +98,7 @@ class TestRunDeploy:
 
 
 class TestRunAlphaBuild:
-    @patch("company.ci.steps._run_build_script")
+    @patch("company.ci.steps._run_script")
     @patch("company.ci.steps.set_commit_status")
     @patch("company.ci.steps.checkout_app")
     def test_no_commit_status(self, _mock_checkout, mock_status, _mock_script, capsys):

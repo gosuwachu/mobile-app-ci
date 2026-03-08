@@ -36,11 +36,7 @@ CI step definitions and shared tooling for the [mobile-app](https://github.com/g
 
 ## How It Works
 
-Child Jenkinsfiles are minimal wrappers that call `./ci-cli <platform> <step>` with explicit arguments. The CLI handles:
-1. Checking out the app repo at the pinned `COMMIT_SHA`
-2. Setting GitHub commit status to `pending`
-3. Running the platform build script from the app repo (`{platform}/{platform}_build/{script}.sh`)
-4. Setting GitHub commit status to `success` or `failure`
+Child Jenkinsfiles are minimal wrappers that call `./ci-cli <platform> <step>` with explicit arguments. Each step has its own function in `steps.py` (e.g. `run_build`, `run_deploy`). The `commit_status` context manager handles the pending/success/failure lifecycle. Steps that run build scripts call `_run_script()` with the hardcoded path to the script in the app repo.
 
 The omnibus job in Jenkins (`mobile-app-support/omnibus`) checks out this repo at `main` and runs whichever Jenkinsfile is specified by the `JENKINSFILE` parameter.
 
@@ -62,12 +58,13 @@ GH_TOKEN=<token> ./ci-cli ios build --commit-sha <sha> --build-url <url>
 
 ## Adding a New CI Step
 
-1. Add entry to `STEPS` dict in `src/company/ci/steps.py`
-2. Add entry to `STEP_SCRIPTS` in `steps.py` mapping step name to script filename
-3. Create build script in app repo: `{platform}/{platform}_build/{script}.sh`
-4. Create Jenkinsfile in `ci/<platform>/<platform>-<step>.Jenkinsfile`
-5. Add the step to the trigger orchestrator in the app repo (`ci/trigger.Jenkinsfile`)
-6. Add the context name to `IOS_CONTEXTS` or `ANDROID_CONTEXTS` in the trigger
+1. Add `StepConfig` entry to `STEPS` dict in `src/company/ci/steps.py`
+2. Add a `run_<step>` function in `steps.py` with the script path hardcoded
+3. Add the function to `STEP_FUNCTIONS` in `cli.py` and update the dispatch logic
+4. Create build script in app repo: `{platform}/{platform}_build/{script}.sh`
+5. Create Jenkinsfile in `ci/<platform>/<platform>-<step>.Jenkinsfile`
+6. Add the step to the trigger orchestrator in the app repo (`ci/trigger.Jenkinsfile`)
+7. Add the context name to `IOS_CONTEXTS` or `ANDROID_CONTEXTS` in the trigger
 
 ## Linting
 
